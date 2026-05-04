@@ -55,11 +55,13 @@ dimensions:
       - "Important face and gesture details survive chat-size preview."
       - "The layout has clean negative space and no clutter."
   style_consistency:
-    weight: 8
+    weight: 10
     min_score: 7
     checks:
       - "Line weight, palette, face design, text treatment, and character proportions are consistent."
       - "The set feels designed, not assembled from unrelated generated cells."
+      - "For repeated-character packs, a model-sheet or identity-anchor contract fixes proportions, face, accessories, palette, and allowed deformation."
+      - "Each accepted source records character-consistency evidence, not only text or pose QA."
   pack_strategy:
     weight: 8
     min_score: 7
@@ -81,18 +83,22 @@ automatic_failure_patterns:
   - "The character is a plain object icon with minimal face or emotional range."
   - "The pack has fewer than six visibly distinct poses or emotional states."
   - "Chat-size preview makes the face, gesture, or text hard to read."
+  - "Repeated-character production lacks a character-design contract or shows character identity drift between items."
   - "The output primarily looks like a technical placeholder, fixture, clip art, or old free sticker set."
   - "Production source art uses code-generated fallback or Source-PNG fallback instead of Codex built-in image_gen."
 
 required_project_artifacts:
   - "reports/market_research_notes.md"
   - "reports/character_design_lock.md"
+  - "reports/character_consistency_qa.md"
+  - "reports/item_communication_plan.md"
   - "reports/chat_size_preview.png"
 
 recommended_workflow:
   - "Research current LINE Store/Creators examples at a high level; record trends without copying protected expression."
   - "Generate or sketch character candidates first."
-  - "Lock character design and text system before item production."
+  - "Lock character design, identity anchors, and text system before item production."
+  - "Create model-sheet or reference-sheet evidence and review each item for character identity drift."
   - "Write item plans around chat function and emotional state, not only physical action."
   - "Generate one final source image per adopted item."
   - "Run technical validation and market-grade QA separately."

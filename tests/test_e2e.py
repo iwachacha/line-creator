@@ -51,6 +51,8 @@ def approve_project(project_path: Path) -> None:
                         "index": i,
                         "source_file": f"source_{i:02d}.png",
                         "method": "Codex built-in image_gen via imagegen skill",
+                        "identity_reference": "reports/character_consistency_qa.md model sheet",
+                        "consistency_notes": "matches model sheet identity anchors",
                         "raw_generation_file": f"assets/working/image_gen_source_{i:02d}.png",
                         "prompt_reference": "reports/image_generation_plan.md",
                     }
@@ -99,10 +101,13 @@ def test_generate_plan_requires_builtin_imagegen(tmp_path):
     assert "Integrated Text Protocol" in text
     assert "physical sticker mockups" in text
     assert "Market-Grade Prerequisites" in text
+    assert "character_consistency_qa.md" in text
+    assert "Character identity contract" in text
     assert "market-audit" in text
     plan_path = write_image_generation_plan(project)
     assert plan_path.exists()
     qa_text = build_generation_qa_checklist(project)
+    assert "Character Consistency" in qa_text
     assert "No `???`, mojibake" in qa_text
     qa_path = write_generation_qa_checklist(project)
     assert qa_path.exists()
@@ -276,7 +281,11 @@ def write_market_quality_artifacts(project_path: Path) -> None:
         encoding="utf-8",
     )
     (reports / "character_design_lock.md").write_text(
-        "Character design lock: memorable silhouette, face, expression range, mascot identity, signature hook.",
+        "Character design lock: memorable silhouette, face, expression range, mascot identity, signature hook, identity anchors, model sheet, fixed proportions.",
+        encoding="utf-8",
+    )
+    (reports / "character_consistency_qa.md").write_text(
+        "Character consistency QA: model sheet, identity anchors, fixed proportions, same character, immutable face spacing and palette.",
         encoding="utf-8",
     )
     (reports / "item_communication_plan.md").write_text(
@@ -335,6 +344,39 @@ def test_market_quality_passes_with_character_and_market_artifacts(tmp_path):
     assert result.total_score >= 80
     report = build_market_quality_report(project, result)
     assert "Status: PASS" in report
+
+
+def test_market_quality_requires_character_consistency_qa(tmp_path):
+    project_path = tmp_path / "case"
+    init_project(project_path, "static_sticker", 8, approval_policy="automated")
+    approve_project(project_path)
+    write_market_quality_artifacts(project_path)
+    (project_path / "reports" / "character_consistency_qa.md").unlink()
+    make_sources(project_path, 8)
+    project = load_project(project_path)
+    finish_project(project)
+    result = audit_market_quality(project)
+    assert not result.ok
+    assert result.scores["style_consistency"] < 7
+    assert any("character consistency QA" in finding for finding in result.findings)
+
+
+def test_market_quality_fails_recorded_identity_drift(tmp_path):
+    project_path = tmp_path / "case"
+    init_project(project_path, "static_sticker", 8, approval_policy="automated")
+    approve_project(project_path)
+    write_market_quality_artifacts(project_path)
+    manifest = project_path / "assets" / "working" / "source_manifest.yml"
+    data = yaml.safe_load(manifest.read_text(encoding="utf-8"))
+    data["items"][0]["consistency_notes"] = "identity drift: face spacing makes this read as a different character"
+    manifest.write_text(yaml.safe_dump(data, sort_keys=False, allow_unicode=True), encoding="utf-8")
+    make_sources(project_path, 8)
+    project = load_project(project_path)
+    finish_project(project)
+    result = audit_market_quality(project)
+    assert not result.ok
+    assert result.scores["style_consistency"] < 5
+    assert any("character identity" in failure.lower() for failure in result.failures)
 
 
 def test_visual_report_creates_required_chat_size_preview(tmp_path):

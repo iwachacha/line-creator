@@ -4,7 +4,7 @@ Reference date: 2026-05-04 JST.
 
 This plan records the next improvements needed to make the LINE sticker and emoji factory reliable across arbitrary user ideas, themes, and genres. It is based on the current v1 scope: ordinary static LINE stickers, regular LINE emoji, Python CLI operation, and manual LINE Creators Market upload.
 
-Implementation note: the 2026-05-04 improvement pass implemented the P0 gate, sample fixture, metadata validation, ZIP re-validation, data-aware risk report, source mapping, source manifest warnings, and expanded visual QA. Remaining P2/P3 work can further tune false positives and package layout cleanup.
+Implementation note: the 2026-05-04 improvement pass implemented the P0 gate, sample fixture, metadata validation, ZIP re-validation, data-aware risk report, source mapping, source manifest warnings, expanded visual QA, and repeated-character consistency gates. Remaining P2/P3 work can further tune false positives and package layout cleanup.
 
 ## Current Baseline
 
@@ -30,6 +30,7 @@ Known gaps:
 - A project can be marked effectively ready even when character appeal, expression variety, text integration, and current market fit are poor.
 - `generate-plan` can encourage technically organized production without proving that the character, expression plan, or item communication intent is strong.
 - Sheet-based batch generation can create visually similar low-control items and should not be the default for final production artwork.
+- Repeated-character packs can still drift across per-item generations unless the factory requires model-sheet anchors and per-item identity QA.
 
 Official LINE references checked on 2026-05-04 JST:
 
@@ -46,6 +47,7 @@ Official LINE references checked on 2026-05-04 JST:
 - Keep v1 conservative and avoid adding unsupported product types.
 - Add market-grade QA so `READY` means more than technically valid files.
 - Require character design, expression readability, text integration, and pack variety checks before packaging is treated as upload-ready.
+- Require repeated-character packs to define immutable identity anchors and review generated items for character drift before HAG-5.
 
 ## Non-Goals
 
@@ -137,6 +139,34 @@ Acceptance criteria:
 - The factory warns or fails readiness when final items are derived from unreviewed 4x2 sheet crops.
 - Per-item generation remains the recommended production path.
 - Rough ideation sheets can still be archived in `assets/working/`.
+
+### 0.3 Enforce Repeated-Character Consistency
+
+Problem: per-item generation can produce a sellable-looking pack where the mascot's face spacing, body proportions, accessory placement, or line weight drifts enough that each sticker feels like a related variant rather than the same character.
+
+Target behavior:
+
+- For repeated-character packs, require `reports/character_consistency_qa.md`.
+- The style lock must define a model sheet or approved reference image, immutable identity anchors, allowed variables, and forbidden drift.
+- Every production prompt must include the same character identity contract.
+- `assets/working/source_manifest.yml` should record per-item identity reference and consistency notes.
+- Market-quality QA must fail when character consistency evidence is missing or when source notes record identity drift.
+
+Likely files:
+
+- `rules/sticker_market_quality.yml`
+- `scripts/line_factory/generation.py`
+- `scripts/line_factory/market_quality.py`
+- `scripts/line_factory/visual_report.py`
+- `workflows/03_style_lock.md`
+- `workflows/04_generate.md`
+- `tests/test_e2e.py`
+
+Acceptance criteria:
+
+- Missing character consistency QA blocks market readiness for production-quality repeated-character packs.
+- A pack with model-sheet anchors and manifest consistency evidence can pass market-quality QA.
+- A manifest that records identity drift fails market-quality QA.
 
 ### 1. Enforce HAG State Before ZIP Creation
 

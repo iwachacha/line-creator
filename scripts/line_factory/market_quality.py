@@ -39,8 +39,12 @@ def audit_market_quality(project: Project) -> MarketQualityResult:
     one_phrase = has_single_repeated_phrase(project)
     has_market_notes = (project.path / "reports" / "market_research_notes.md").exists()
     has_character_lock = (project.path / "reports" / "character_design_lock.md").exists()
+    has_character_consistency_qa = (project.path / "reports" / "character_consistency_qa.md").exists()
     has_communication_plan = (project.path / "reports" / "item_communication_plan.md").exists()
-    sheet_sources = manifest_mentions(manifest_entries, ("4x2", "sheet", "cropped into item source", "sheet crop"))
+    sheet_sources = manifest_mentions(
+        manifest_entries,
+        ("4x2", "sticker sheet", "source sheet", "cropped into item source", "sheet crop", "sheet-crop"),
+    )
     detached_text = manifest_mentions(manifest_entries, ("generic detached", "detached label", "label box", "composited locally"))
     fallback_sources = manifest_mentions(
         manifest_entries,
@@ -48,7 +52,29 @@ def audit_market_quality(project: Project) -> MarketQualityResult:
     )
     communication_intent = text_contains_any(texts, ("chat function", "emotional state", "camera", "meaning without text", "communication intent"))
     character_terms = text_contains_any(texts, ("silhouette", "face", "expression", "mascot", "character design", "signature"))
+    identity_terms = text_contains_any(
+        texts,
+        (
+            "character consistency",
+            "identity anchor",
+            "identity anchors",
+            "model sheet",
+            "fixed proportions",
+            "fixed ratio",
+            "same character",
+            "must stay identical",
+            "immutable",
+        ),
+    )
     market_terms = text_contains_any(texts, ("market", "LINE Store", "buyer", "competitor", "ranking", "current"))
+    manifest_identity_refs = manifest_mentions(
+        manifest_entries,
+        ("identity reference", "model sheet", "character consistency", "same character", "identity anchor"),
+    )
+    identity_drift = manifest_mentions(
+        manifest_entries,
+        ("identity drift", "style drift", "inconsistent character", "different character", "character mismatch"),
+    )
     item_variety = estimate_item_variety(project)
 
     base_scores = {name: 10 for name in dimensions}
@@ -58,6 +84,18 @@ def audit_market_quality(project: Project) -> MarketQualityResult:
     if not character_terms:
         base_scores["character_appeal"] = min(base_scores.get("character_appeal", 10), 6)
         result.findings.append("Project notes do not describe silhouette, face, expression range, or mascot identity.")
+    if not has_character_consistency_qa:
+        base_scores["style_consistency"] = min(base_scores.get("style_consistency", 10), 5)
+        result.findings.append("Missing character consistency QA; repeated-character identity cannot be proven.")
+    if not identity_terms:
+        base_scores["style_consistency"] = min(base_scores.get("style_consistency", 10), 6)
+        result.findings.append("Project notes do not define fixed identity anchors or a model-sheet contract.")
+    if manifest_entries and not manifest_identity_refs:
+        base_scores["style_consistency"] = min(base_scores.get("style_consistency", 10), 6)
+        result.findings.append("Source manifest does not record per-item character identity consistency evidence.")
+    if identity_drift:
+        base_scores["style_consistency"] = min(base_scores.get("style_consistency", 10), 4)
+        result.findings.append("Source manifest records character identity or style drift.")
     if not has_communication_plan:
         base_scores["communication_clarity"] = min(base_scores.get("communication_clarity", 10), 4)
         base_scores["pack_strategy"] = min(base_scores.get("pack_strategy", 10), 5)
@@ -109,7 +147,17 @@ def audit_market_quality(project: Project) -> MarketQualityResult:
     if missing_required:
         result.failures.append("required market-grade artifacts are missing.")
     for pattern in rules.get("automatic_failure_patterns") or []:
-        if pattern_matches_project(str(pattern), sheet_sources, detached_text, fallback_sources, one_phrase, item_variety, texts):
+        if pattern_matches_project(
+            str(pattern),
+            sheet_sources,
+            detached_text,
+            fallback_sources,
+            one_phrase,
+            item_variety,
+            texts,
+            identity_drift,
+            has_character_consistency_qa,
+        ):
             result.failures.append(f"automatic failure pattern: {pattern}")
 
     if result.failures:
@@ -117,6 +165,7 @@ def audit_market_quality(project: Project) -> MarketQualityResult:
             [
                 "Do not mark this project ready for manual upload.",
                 "Create market research notes, character design lock, and item communication plan before final art production.",
+                "Create character consistency QA with model-sheet anchors before repeated-character production.",
                 "Generate final artwork one item at a time unless a stricter high-control batch method is documented.",
                 "Treat generic detached text labels as emergency fallback, not production quality.",
             ]
@@ -201,7 +250,7 @@ def load_manifest_entries(project: Project) -> list[dict[str, Any]]:
 
 def manifest_mentions(entries: list[dict[str, Any]], needles: tuple[str, ...]) -> bool:
     for entry in entries:
-        text = " ".join(str(value) for value in entry.values()).lower()
+        text = " ".join(f"{key} {value}" for key, value in entry.items()).lower()
         if any(needle.lower() in text for needle in needles):
             return True
     return False
@@ -250,6 +299,8 @@ def pattern_matches_project(
     one_phrase: bool,
     item_variety: float,
     texts: str,
+    identity_drift: bool,
+    has_character_consistency_qa: bool,
 ) -> bool:
     lower = pattern.lower()
     if "4x2 sheet" in lower or "sheet art" in lower:
@@ -264,4 +315,6 @@ def pattern_matches_project(
         return one_phrase and "meaning without text" not in texts
     if "plain object icon" in lower:
         return "object icon" in texts or ("generic object" in texts and "signature" not in texts)
+    if "character identity drift" in lower or "character-design contract" in lower:
+        return identity_drift or not has_character_consistency_qa
     return False
