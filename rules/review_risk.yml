@@ -1,0 +1,62 @@
+reference_date: "2026-05-04 JST"
+source: "https://creator.line.me/en/review_guideline/"
+fatal_keywords:
+  rights:
+    - trademark
+    - copyright
+    - existing IP
+    - fan art
+    - celebrity
+    - logo
+    - brand
+  advertising:
+    - campaign
+    - sale
+    - discount
+    - search online
+    - release date
+    - URL
+  safety:
+    - sexual
+    - violence
+    - discrimination
+    - illegal
+    - drug
+    - gambling
+    - self-harm
+    - phishing
+review_keywords:
+  people:
+    - portrait
+    - public figure
+    - politician
+    - celebrity likeness
+    - influencer
+  services:
+    - LINE
+    - messenger
+    - Instagram
+    - X.com
+    - TikTok
+    - YouTube
+  sensitive_topics:
+    - religion
+    - political
+    - election
+    - medical
+    - donation
+    - charity
+    - casino
+    - lottery
+    - alcohol
+    - tobacco
+manual_review_required:
+  - Photos or portraits require documented permission.
+  - Any reference to companies, products, services, messenger apps, public figures, religion, politics, medical claims, or donations requires human review.
+  - Typos, unclear text, low visibility, and duplicate-looking items require human review before packaging.
+checklist:
+  - No third-party trademarks, copyrighted characters, fan art, or unclear-rights materials.
+  - No famous-work, famous-character, specific-artist, or corporate-logo style dependency.
+  - No advertisement, campaign announcement, product release date, URL, recruitment, or donation solicitation.
+  - No illegal activity, sexual explicitness, graphic violence, discrimination, bullying, self-harm, or public-order risk.
+  - Text, title, description, creator name, and copyright are consistent and typo-checked.

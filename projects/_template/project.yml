@@ -1,0 +1,18 @@
+name: template_project
+kind: static_sticker
+language: ja
+count: 8
+creator_name: ""
+title: ""
+description: ""
+copyright: ""
+status: draft
+approvals:
+  HAG-1: pending
+  HAG-2: pending
+  HAG-3: pending
+  HAG-4: pending
+  HAG-5: pending
+notes:
+  rights: "Use only original or clearly licensed materials."
+  upload: "Manual LINE Creators Market upload only."

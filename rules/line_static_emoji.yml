@@ -1,0 +1,36 @@
+kind: regular_emoji
+official_name: Regular LINE emoji
+reference_date: "2026-05-04 JST"
+source: "https://creator.line.me/en/guideline/emoji/"
+unsupported_v1:
+  - animated_emoji
+  - letter_emoji_sets
+images:
+  tab:
+    required: true
+    quantity: 1
+    filename: tab.png
+    width: 96
+    height: 74
+  emoji:
+    counts:
+      min: 8
+      max: 40
+    filename_pattern: "{index:03d}.png"
+    width: 180
+    height: 180
+format:
+  image_format: PNG
+  color_modes: [RGBA, RGB]
+  required_alpha_for_item_images: true
+  minimum_dpi: 72
+limits:
+  max_image_bytes: 1048576
+  max_zip_bytes: 20971520
+layout:
+  recommended_margin_px: 0
+text_limits:
+  creator_name: 50
+  title: 40
+  description: 160
+  copyright: 50

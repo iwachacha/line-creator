@@ -1,0 +1,9 @@
+index,type,text,description,status,source_file
+1,item,OK,Test-only blue circle face,approved,source_01.png
+2,item,YES,Test-only green square face,approved,source_02.png
+3,item,NO,Test-only red diamond face,approved,source_03.png
+4,item,HI,Test-only purple circle face,approved,source_04.png
+5,item,GO,Test-only orange rounded face,approved,source_05.png
+6,item,WAIT,Test-only teal face,approved,source_06.png
+7,item,THANKS,Test-only navy face,approved,source_07.png
+8,item,BYE,Test-only pink face,approved,source_08.png

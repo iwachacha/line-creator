@@ -1,0 +1,45 @@
+kind: static_sticker
+official_name: Ordinary static LINE stickers
+reference_date: "2026-05-04 JST"
+source: "https://creator.line.me/en/guideline/sticker/"
+unsupported_v1:
+  - animated
+  - custom
+  - message
+  - big
+  - pop-up
+  - effect
+images:
+  main:
+    required: true
+    quantity: 1
+    filename: main.png
+    width: 240
+    height: 240
+  tab:
+    required: true
+    quantity: 1
+    filename: tab.png
+    width: 96
+    height: 74
+  stickers:
+    counts: [8, 16, 24, 32, 40]
+    filename_pattern: "{index:02d}.png"
+    max_width: 370
+    max_height: 320
+    even_dimensions: true
+format:
+  image_format: PNG
+  color_modes: [RGBA, RGB]
+  required_alpha_for_item_images: true
+  minimum_dpi: 72
+limits:
+  max_image_bytes: 1048576
+  max_zip_bytes: 62914560
+layout:
+  recommended_margin_px: 10
+text_limits:
+  creator_name: 50
+  title: 40
+  description: 160
+  copyright: 50

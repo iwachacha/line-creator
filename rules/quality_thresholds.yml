@@ -1,0 +1,40 @@
+visibility:
+  min_nontransparent_bbox_ratio_sticker: 0.2
+  min_nontransparent_bbox_ratio_emoji: 0.45
+  min_alpha_coverage_ratio: 0.03
+  warn_low_contrast_luma_delta: 28
+  warn_edge_alpha_coverage_ratio_above: 0.02
+  warn_corner_alpha_above: 8
+  warn_opaque_bbox_fill_ratio_above: 0.98
+  warn_chroma_key_edge_ratio_above: 0.01
+duplicates:
+  warn_average_hash_hamming_distance_below: 1
+  warn_average_color_distance_below: 35
+files:
+  require_png_signature: true
+  require_transparency_for_items: true
+  fatal_on_oversize: true
+reports:
+  generate_validation_md: true
+  generate_contact_sheet_png: true
+  generate_risk_report_md: true
+metadata:
+  character_count_policy: "LINE metadata limits are counted with Python len(), equivalent to Unicode code point count for these checks."
+  warn_suspect_text_tokens:
+    - "???"
+    - "TODO"
+    - "TBD"
+    - "draft"
+    - "sample"
+    - "placeholder"
+    - "・ｽ・ｽ"
+    - "邵ｺ"
+    - "郢ｧ"
+    - "隴"
+    - "闕ｳ"
+    - "騾"
+    - "陷"
+  warn_suspect_text_patterns:
+    - "\\.\\.\\."
+    - "[!！?？]{4,}"
+    - "lorem ipsum"
