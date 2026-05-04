@@ -9,7 +9,7 @@ v1 supports:
 - Ordinary static LINE stickers
 - Regular LINE emoji
 - Python CLI pipeline
-- Source-PNG fallback when image generation is unavailable
+- Codex built-in `image_gen` production artwork through the `imagegen` skill
 
 v1 does not support:
 
@@ -17,6 +17,7 @@ v1 does not support:
 - Custom, message, Big, pop-up, or effect stickers
 - LINE Creators Market upload automation
 - Price setting or sales submission automation
+- Source-PNG fallback, Pillow-generated, simple-geometry, placeholder, or code-generated production artwork
 
 ## Required Project Flow
 
@@ -43,6 +44,8 @@ Default projects use manual human approval gates. Stop and clearly request human
 Approval state is canonical in `project.yml`; `approvals.md` is for human-readable notes.
 
 Fully automated projects may set `automation.approval_policy: automated` in `project.yml` or be created with `python -m line_factory.cli init --approval-policy automated`. In automated mode, do not stop for HAG-1 through HAG-5; instead run automated validation, risk reporting, visual report generation, and packaging. Never mark a project READY if validation has fatal errors. In manual mode, also never mark READY if a required approval is missing.
+
+Production sticker and emoji source artwork must be generated with Codex built-in `image_gen` through the `imagegen` skill. If built-in image generation is unavailable, stop production instead of substituting local Source-PNG fallback. Local fixture art is allowed only for `status: fixture` test projects such as `projects/sample_static_sticker`.
 
 ## Rights and Review Constraints
 

@@ -10,6 +10,7 @@ from .project import Project
 def build_visual_report(project: Project) -> str:
     build_contact_sheet(project)
     visual_png = build_visual_report_image(project)
+    chat_png = build_chat_size_preview_image(project)
     final_gate = (
         "- Automated approval policy is active; use this report as package-readiness evidence."
         if project.uses_automated_approvals
@@ -28,6 +29,7 @@ def build_visual_report(project: Project) -> str:
             "",
             "- Contact sheet: `reports/contact_sheet.png`",
             "- Visual QA sheet: `reports/visual_report.png`",
+            "- Chat-size preview: `reports/chat_size_preview.png`",
             generation_gate,
             "- Confirm integrated text belongs to the artwork and is not a detached generic label unless explicitly style-locked.",
             "- Confirm the artwork reads as LINE sticker/emoji art, not a physical sticker mockup.",
@@ -75,6 +77,43 @@ def build_visual_report_image(project: Project) -> str:
         paste_preview(sheet, img, label_w + cell_w * 2, y, cell_w, row_h, "dark")
         paste_preview(sheet, chat, label_w + cell_w * 3, y, chat_w, row_h, "white")
     output = project.reports_dir / "visual_report.png"
+    output.parent.mkdir(parents=True, exist_ok=True)
+    sheet.save(output, "PNG")
+    return str(output)
+
+
+def build_chat_size_preview_image(project: Project) -> str:
+    image_paths = sorted(project.final_dir.glob("*.png"))
+    item_paths = [path for path in image_paths if path.stem.isdigit()]
+    thumbs = []
+    for path in item_paths:
+        img = open_png(path).convert("RGBA")
+        img.thumbnail((64, 64), Image.Resampling.LANCZOS)
+        thumbs.append((path.name, img.copy()))
+        img.close()
+
+    font = ImageFont.load_default()
+    cols = min(4, max(1, len(thumbs)))
+    rows = max(1, (len(thumbs) + cols - 1) // cols)
+    cell_w = 132
+    cell_h = 108
+    header_h = 28
+    sheet = Image.new("RGB", (cols * cell_w, header_h + rows * cell_h), "white")
+    draw = ImageDraw.Draw(sheet)
+    draw.text((10, 9), "chat-size preview", fill=(20, 20, 20), font=font)
+    for i, (name, img) in enumerate(thumbs):
+        col = i % cols
+        row = i // cols
+        x = col * cell_w
+        y = header_h + row * cell_h
+        bg = Image.new("RGBA", (cell_w, cell_h), (255, 255, 255, 255))
+        px = (cell_w - img.width) // 2
+        py = 10
+        bg.alpha_composite(img, (px, py))
+        ImageDraw.Draw(bg).rectangle((0, 0, cell_w - 1, cell_h - 1), outline=(220, 220, 220))
+        sheet.paste(bg.convert("RGB"), (x, y))
+        draw.text((x + 8, y + 78), name, fill=(30, 30, 30), font=font)
+    output = project.reports_dir / "chat_size_preview.png"
     output.parent.mkdir(parents=True, exist_ok=True)
     sheet.save(output, "PNG")
     return str(output)

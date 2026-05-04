@@ -82,6 +82,7 @@ automatic_failure_patterns:
   - "The pack has fewer than six visibly distinct poses or emotional states."
   - "Chat-size preview makes the face, gesture, or text hard to read."
   - "The output primarily looks like a technical placeholder, fixture, clip art, or old free sticker set."
+  - "Production source art uses code-generated fallback or Source-PNG fallback instead of Codex built-in image_gen."
 
 required_project_artifacts:
   - "reports/market_research_notes.md"

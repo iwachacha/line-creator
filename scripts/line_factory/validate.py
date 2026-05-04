@@ -172,6 +172,58 @@ def check_source_traceability(project: Project, result: ValidationResult) -> Non
         source_name = item.source_file or f"source_{item.index:02d}.png"
         if source_name not in manifest_sources:
             result.add_warning(f"assets/working/source_manifest.yml missing entry for {source_name}")
+    check_generation_method_policy(project, entries, result)
+
+
+def check_generation_method_policy(project: Project, entries: list[dict], result: ValidationResult) -> None:
+    if is_fixture_project(project):
+        result.info.append("generation method policy: fixture project; local test art is allowed only for CLI verification")
+        return
+    if not entries:
+        result.add_error("assets/working/source_manifest.yml: production projects must record Codex built-in image_gen evidence")
+        return
+    disallowed_tokens = (
+        "pillow",
+        "source-png fallback",
+        "fallback",
+        "simple geometry",
+        "placeholder",
+        "dummy",
+        "fixture",
+        "code-generated",
+        "code generated",
+        "locally generated",
+        "local text",
+        "composited locally",
+    )
+    required_tokens = ("image_gen", "built-in image_gen", "codex built-in", "codex image")
+    for entry in entries:
+        source_name = str(entry.get("source_file") or "<unknown>")
+        evidence = " ".join(
+            str(entry.get(key) or "")
+            for key in (
+                "method",
+                "generation_tool",
+                "raw_generation_file",
+                "prompt_reference",
+                "production_note",
+                "review_notes",
+                "approval_notes",
+            )
+        ).lower()
+        if any(token in evidence for token in disallowed_tokens):
+            result.add_error(
+                f"{source_name}: production source method is not allowed; use Codex built-in image_gen via the imagegen skill"
+            )
+            continue
+        if not any(token in evidence for token in required_tokens):
+            result.add_error(
+                f"{source_name}: missing Codex built-in image_gen evidence in source_manifest.yml"
+            )
+
+
+def is_fixture_project(project: Project) -> bool:
+    return str(project.config.get("status") or "").strip().lower() == "fixture"
 
 
 def validate_image_file(

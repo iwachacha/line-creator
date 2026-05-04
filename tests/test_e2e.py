@@ -11,6 +11,7 @@ from line_factory.package import PackageError, package_project, verify_zip, zip_
 from line_factory.project import init_project, load_project
 from line_factory.risk_report import build_risk_report
 from line_factory.validate import validate_project
+from line_factory.visual_report import build_visual_report
 
 
 def make_sources(project_path: Path, count: int) -> None:
@@ -42,7 +43,25 @@ def approve_project(project_path: Path) -> None:
     cfg_path.write_text(yaml.safe_dump(cfg, sort_keys=False, allow_unicode=True), encoding="utf-8")
     manifest = project_path / "assets" / "working" / "source_manifest.yml"
     manifest.parent.mkdir(parents=True, exist_ok=True)
-    manifest.write_text("items: []\n", encoding="utf-8")
+    manifest.write_text(
+        yaml.safe_dump(
+            {
+                "items": [
+                    {
+                        "index": i,
+                        "source_file": f"source_{i:02d}.png",
+                        "method": "Codex built-in image_gen via imagegen skill",
+                        "raw_generation_file": f"assets/working/image_gen_source_{i:02d}.png",
+                        "prompt_reference": "reports/image_generation_plan.md",
+                    }
+                    for i in range(1, 9)
+                ]
+            },
+            sort_keys=False,
+            allow_unicode=True,
+        ),
+        encoding="utf-8",
+    )
 
 
 def test_static_sticker_finish_validate_package(tmp_path):
@@ -76,6 +95,7 @@ def test_generate_plan_requires_builtin_imagegen(tmp_path):
     text = build_image_generation_plan(project)
     assert "built-in `image_gen` tool" in text
     assert "Do not create production source art with Pillow" in text
+    assert "must not silently downgrade to Source-PNG fallback" in text
     assert "Integrated Text Protocol" in text
     assert "physical sticker mockups" in text
     assert "Market-Grade Prerequisites" in text
@@ -181,6 +201,45 @@ def test_opaque_source_warns(tmp_path):
     assert any("rectangular" in warning for warning in result.warnings)
 
 
+def test_production_source_png_fallback_is_fatal(tmp_path):
+    project_path = tmp_path / "case"
+    init_project(project_path, "static_sticker", 8, approval_policy="automated")
+    approve_project(project_path)
+    make_sources(project_path, 8)
+    manifest = project_path / "assets" / "working" / "source_manifest.yml"
+    data = yaml.safe_load(manifest.read_text(encoding="utf-8"))
+    for entry in data["items"]:
+        entry["method"] = "Pillow vector-style transparent PNG source fallback"
+    manifest.write_text(yaml.safe_dump(data, sort_keys=False, allow_unicode=True), encoding="utf-8")
+    project = load_project(project_path)
+    finish_project(project)
+    result = validate_project(project)
+    assert any("production source method is not allowed" in error for error in result.errors)
+    with pytest.raises(PackageError):
+        package_project(project)
+
+
+def test_fixture_project_allows_local_test_art(tmp_path):
+    project_path = tmp_path / "fixture"
+    init_project(project_path, "static_sticker", 8)
+    approve_project(project_path)
+    cfg_path = project_path / "project.yml"
+    cfg = yaml.safe_load(cfg_path.read_text(encoding="utf-8"))
+    cfg["status"] = "fixture"
+    cfg_path.write_text(yaml.safe_dump(cfg, sort_keys=False, allow_unicode=True), encoding="utf-8")
+    make_sources(project_path, 8)
+    manifest = project_path / "assets" / "working" / "source_manifest.yml"
+    data = yaml.safe_load(manifest.read_text(encoding="utf-8"))
+    for entry in data["items"]:
+        entry["method"] = "Pillow local fixture art"
+    manifest.write_text(yaml.safe_dump(data, sort_keys=False, allow_unicode=True), encoding="utf-8")
+    project = load_project(project_path)
+    finish_project(project)
+    result = validate_project(project)
+    assert not any("production source method is not allowed" in error for error in result.errors)
+    assert any("fixture project" in info for info in result.info)
+
+
 def test_zip_tampering_fails_verification(tmp_path):
     project_path = tmp_path / "case"
     init_project(project_path, "static_sticker", 8)
@@ -227,6 +286,28 @@ def write_market_quality_artifacts(project_path: Path) -> None:
     Image.new("RGB", (320, 240), "white").save(reports / "chat_size_preview.png")
 
 
+def write_structured_item_descriptions(project_path: Path) -> None:
+    rows = [
+        ("了解です", "checkmark memo; confident upright pose"),
+        ("ありがとうございます", "deep bow and sparkle; formal warmth"),
+        ("少しお待ちください", "clock and pause note; apologetic wait"),
+        ("確認します", "checklist and magnifier; focused checking"),
+        ("助かります", "hugging memo; relieved appreciation"),
+        ("おつかれさまです", "warm cup; gentle recognition"),
+        ("無理なくでOKです", "open hands; no-pressure permission"),
+        ("また明日", "wave and moon memo; soft closing"),
+    ]
+    lines = ["index,type,text,description,status,source_file"]
+    for i, (text, unique) in enumerate(rows, start=1):
+        description = (
+            "chat function: daily message; emotional state: polite; visual action: "
+            + unique
+            + "; camera: bust-up; meaning without text: clear; differs by unique pose"
+        )
+        lines.append(f'{i},item,{text},"{description}",approved,source_{i:02d}.png')
+    (project_path / "items.csv").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
 def test_market_quality_fails_without_market_artifacts(tmp_path):
     project_path = tmp_path / "case"
     init_project(project_path, "static_sticker", 8, approval_policy="automated")
@@ -254,3 +335,28 @@ def test_market_quality_passes_with_character_and_market_artifacts(tmp_path):
     assert result.total_score >= 80
     report = build_market_quality_report(project, result)
     assert "Status: PASS" in report
+
+
+def test_visual_report_creates_required_chat_size_preview(tmp_path):
+    project_path = tmp_path / "case"
+    init_project(project_path, "static_sticker", 8, approval_policy="automated")
+    approve_project(project_path)
+    make_sources(project_path, 8)
+    project = load_project(project_path)
+    finish_project(project)
+    build_visual_report(project)
+    assert (project_path / "reports" / "chat_size_preview.png").exists()
+
+
+def test_market_quality_variety_ignores_repeated_structured_labels(tmp_path):
+    project_path = tmp_path / "case"
+    init_project(project_path, "static_sticker", 8, approval_policy="automated")
+    approve_project(project_path)
+    write_market_quality_artifacts(project_path)
+    write_structured_item_descriptions(project_path)
+    make_sources(project_path, 8)
+    project = load_project(project_path)
+    finish_project(project)
+    result = audit_market_quality(project)
+    assert result.ok
+    assert result.scores["expression_variety"] >= 7

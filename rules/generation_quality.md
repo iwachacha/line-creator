@@ -5,7 +5,8 @@ These rules capture reusable production lessons for LINE sticker and emoji artwo
 ## Production Image Generation
 
 - Use Codex built-in `image_gen` through the `imagegen` skill for production artwork.
-- Do not use Pillow, simple geometry, placeholder SVGs, or dummy fixtures as production art unless the user explicitly approves fallback quality.
+- Do not use Pillow, simple geometry, placeholder SVGs, code-generated Source-PNG fallback, or dummy fixtures as production art.
+- If Codex built-in `image_gen` is unavailable, stop production instead of substituting local generated art.
 - If image generation is unavailable, stop and ask for direction instead of silently downgrading.
 - Keep every character and motif original. Avoid existing characters, famous work styles, specific living artist styles, logos, trademarks, public figures, advertising copy, and unclear-rights references.
 

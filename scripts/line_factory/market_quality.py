@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -41,6 +42,10 @@ def audit_market_quality(project: Project) -> MarketQualityResult:
     has_communication_plan = (project.path / "reports" / "item_communication_plan.md").exists()
     sheet_sources = manifest_mentions(manifest_entries, ("4x2", "sheet", "cropped into item source", "sheet crop"))
     detached_text = manifest_mentions(manifest_entries, ("generic detached", "detached label", "label box", "composited locally"))
+    fallback_sources = manifest_mentions(
+        manifest_entries,
+        ("pillow", "source-png fallback", "fallback", "placeholder", "dummy", "fixture", "code-generated", "code generated"),
+    )
     communication_intent = text_contains_any(texts, ("chat function", "emotional state", "camera", "meaning without text", "communication intent"))
     character_terms = text_contains_any(texts, ("silhouette", "face", "expression", "mascot", "character design", "signature"))
     market_terms = text_contains_any(texts, ("market", "LINE Store", "buyer", "competitor", "ranking", "current"))
@@ -69,6 +74,10 @@ def audit_market_quality(project: Project) -> MarketQualityResult:
     if detached_text:
         base_scores["text_integration"] = min(base_scores.get("text_integration", 10), 4)
         result.findings.append("Source manifest suggests detached or locally composited label-style text.")
+    if fallback_sources and str(project.config.get("status") or "").strip().lower() != "fixture":
+        base_scores["composition_and_readability"] = min(base_scores.get("composition_and_readability", 10), 4)
+        base_scores["current_market_fit"] = min(base_scores.get("current_market_fit", 10), 4)
+        result.findings.append("Source manifest indicates code-generated or fallback source art instead of Codex built-in image_gen production art.")
     if not has_market_notes:
         base_scores["current_market_fit"] = min(base_scores.get("current_market_fit", 10), 4)
         result.findings.append("Missing current market research notes.")
@@ -100,7 +109,7 @@ def audit_market_quality(project: Project) -> MarketQualityResult:
     if missing_required:
         result.failures.append("required market-grade artifacts are missing.")
     for pattern in rules.get("automatic_failure_patterns") or []:
-        if pattern_matches_project(str(pattern), sheet_sources, detached_text, one_phrase, item_variety, texts):
+        if pattern_matches_project(str(pattern), sheet_sources, detached_text, fallback_sources, one_phrase, item_variety, texts):
             result.failures.append(f"automatic failure pattern: {pattern}")
 
     if result.failures:
@@ -215,17 +224,29 @@ def estimate_item_variety(project: Project) -> float:
     descriptions = [row.description.strip() for row in rows if row.description.strip()]
     if not descriptions:
         return 0.0
-    normalized = {description[:8] for description in descriptions}
+    normalized = {normalize_variety_description(description) for description in descriptions}
     unique_ratio = len(normalized) / len(descriptions)
     avg_length = sum(len(description) for description in descriptions) / len(descriptions)
     length_factor = min(1.0, avg_length / 18)
     return (unique_ratio * 0.7) + (length_factor * 0.3)
 
 
+def normalize_variety_description(description: str) -> str:
+    text = description.lower()
+    text = re.sub(
+        r"\b(chat function|emotional state|visual action|camera|meaning without text|differs by|difference role)\s*:",
+        "",
+        text,
+    )
+    text = re.sub(r"[^a-z0-9\u3040-\u30ff\u3400-\u9fff]+", " ", text)
+    return " ".join(text.split())[:120]
+
+
 def pattern_matches_project(
     pattern: str,
     sheet_sources: bool,
     detached_text: bool,
+    fallback_sources: bool,
     one_phrase: bool,
     item_variety: float,
     texts: str,
@@ -235,6 +256,8 @@ def pattern_matches_project(
         return sheet_sources
     if "generic detached text label" in lower:
         return detached_text
+    if "code-generated fallback" in lower or "source-png fallback" in lower:
+        return fallback_sources
     if "fewer than six" in lower:
         return item_variety < 0.65
     if "only make sense after reading" in lower:
