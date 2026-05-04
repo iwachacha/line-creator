@@ -14,6 +14,12 @@ Verified locally:
 - `pytest`: pass
 - `python -m line_factory.cli --help`: pass
 
+Quality audit update:
+
+- The automated 10-pack production run on 2026-05-04 proved that technical validation can produce valid ZIPs that are still not sellable.
+- The current factory must distinguish file compliance from market readiness.
+- See `docs/sticker_quality_audit_2026-05-04.md` and `rules/sticker_market_quality.yml`.
+
 Known gaps:
 
 - `projects/sample_static_sticker/` is referenced by `README.md` and `AGENTS.md`, but the sample project is missing.
@@ -21,6 +27,9 @@ Known gaps:
 - Opaque or bad source backgrounds can be converted into final files that pass transparency validation.
 - Project metadata is not deeply validated against LINE text and review constraints.
 - ZIP verification does not yet re-check dimensions, transparency, color mode, and image-level rules inside the archive.
+- A project can be marked effectively ready even when character appeal, expression variety, text integration, and current market fit are poor.
+- `generate-plan` can encourage technically organized production without proving that the character, expression plan, or item communication intent is strong.
+- Sheet-based batch generation can create visually similar low-control items and should not be the default for final production artwork.
 
 Official LINE references checked on 2026-05-04 JST:
 
@@ -35,6 +44,8 @@ Official LINE references checked on 2026-05-04 JST:
 - Keep the project flow generic enough for any original theme, character, object, or genre.
 - Make all quality gates reproducible through CLI reports and tests.
 - Keep v1 conservative and avoid adding unsupported product types.
+- Add market-grade QA so `READY` means more than technically valid files.
+- Require character design, expression readability, text integration, and pack variety checks before packaging is treated as upload-ready.
 
 ## Non-Goals
 
@@ -44,6 +55,88 @@ Official LINE references checked on 2026-05-04 JST:
 - Replacing human visual QA for text accuracy, rights risk, or final taste decisions.
 
 ## P0: Block Unsafe Packaging
+
+### 0. Separate Technical Validity From Market Readiness
+
+Problem: the factory can produce ZIPs that pass technical validation but are visibly below current LINE sticker market quality. The 2026-05-04 automated 10-pack run is the reference failure case.
+
+Target behavior:
+
+- `validate` continues to report technical compliance.
+- Add a market-quality gate using `rules/sticker_market_quality.yml`.
+- Add a report such as `reports/market_quality.md` that scores character appeal, communication clarity, expression variety, text integration, current market fit, composition/readability, style consistency, pack strategy, and rights safety.
+- Do not mark a project `ready_for_manual_upload` unless both technical validation and market-quality QA pass.
+- Automated mode may waive HAG stops, but it must not waive market-quality readiness.
+
+Likely files:
+
+- `rules/sticker_market_quality.yml`
+- `scripts/line_factory/market_quality.py`
+- `scripts/line_factory/cli.py`
+- `scripts/line_factory/reports.py`
+- `scripts/line_factory/project.py`
+- `tests/test_e2e.py`
+
+Acceptance criteria:
+
+- The current 10 automated packs can pass technical validation but fail market-quality QA.
+- A strong pack can pass both technical validation and market-quality QA.
+- `project.yml status` is not set to ready when market-quality QA fails.
+- `reports/market_quality.md` explains which quality dimensions failed and why.
+
+### 0.1 Require Character and Communication Design Before Production
+
+Problem: the previous pipeline generated final artwork before proving character appeal or communication clarity.
+
+Target behavior:
+
+- Add required pre-production artifacts:
+  - `reports/market_research_notes.md`
+  - `reports/character_design_lock.md`
+  - `reports/item_communication_plan.md`
+- Each item plan must include phrase, chat function, emotional state, visual action, camera distance, and how it differs from neighboring items.
+- The generation plan should not recommend final production until these artifacts exist or are explicitly created.
+- Generic "object with face" concepts should fail character-design QA unless they have a strong signature silhouette and emotional range.
+
+Likely files:
+
+- `scripts/line_factory/generation.py`
+- `workflows/02_concept.md`
+- `workflows/03_style_lock.md`
+- `workflows/04_generate.md`
+- `prompts/idea_to_concept.md`
+- `prompts/style_lock.md`
+- `prompts/sticker_batch.md`
+
+Acceptance criteria:
+
+- New production projects record market notes, character lock, and communication intent before source generation.
+- Item plans based only on physical prop actions are flagged.
+- Characterless icon-style packs are blocked from `ready_for_manual_upload`.
+
+### 0.2 Ban Final Production From Low-Control Sheet Generation
+
+Problem: one 4x2 generated sheet per pack produced fast but low-quality final items with weak variation.
+
+Target behavior:
+
+- Sheet generation may be used for rough ideation only.
+- Final production should generate one source image per adopted item unless the project explicitly documents a high-control batch method and passes stricter QA.
+- `source_manifest.yml` should record whether each source came from rough sheet crop, per-item generation, human drawing, or approved fallback.
+- Market-quality QA should fail sheet-cropped final art when it creates repeated poses, tiny characters, or weak text integration.
+
+Likely files:
+
+- `scripts/line_factory/generation.py`
+- `scripts/line_factory/validate.py`
+- `scripts/line_factory/market_quality.py`
+- `workflows/04_generate.md`
+
+Acceptance criteria:
+
+- The factory warns or fails readiness when final items are derived from unreviewed 4x2 sheet crops.
+- Per-item generation remains the recommended production path.
+- Rough ideation sheets can still be archived in `assets/working/`.
 
 ### 1. Enforce HAG State Before ZIP Creation
 

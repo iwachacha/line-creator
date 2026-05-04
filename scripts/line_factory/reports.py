@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from .project import Project
+from .market_quality import build_market_quality_report
 from .risk_report import build_risk_report
 from .validate import ValidationResult, validate_project
 from .visual_report import build_visual_report
@@ -46,4 +47,5 @@ def build_all_reports(project: Project) -> ValidationResult:
     write_validation_report(project, result)
     build_risk_report(project)
     build_visual_report(project)
+    build_market_quality_report(project)
     return result

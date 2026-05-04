@@ -41,6 +41,10 @@ def load_review_risk() -> dict[str, Any]:
     return load_yaml(RULES_DIR / "review_risk.yml")
 
 
+def load_market_quality() -> dict[str, Any]:
+    return load_yaml(RULES_DIR / "sticker_market_quality.yml")
+
+
 @dataclass(frozen=True)
 class ExpectedImage:
     role: str

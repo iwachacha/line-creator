@@ -1,0 +1,97 @@
+reference_date: "2026-05-04 JST"
+purpose: "Market-grade QA rubric for ordinary static LINE stickers and regular LINE emoji. This is separate from technical validation."
+
+readiness:
+  min_total_score: 80
+  min_dimension_score: 7
+  fatal_if_any_dimension_below: 5
+  statuses:
+    valid: "Technical validation passes, but market quality has not necessarily passed."
+    needs_revision: "Technical validation may pass, but market quality is below threshold."
+    ready_for_manual_upload: "Technical validation, review-risk checks, and market quality gate pass."
+
+dimensions:
+  character_appeal:
+    weight: 15
+    min_score: 7
+    checks:
+      - "The character has a memorable silhouette, face, and repeatable identity."
+      - "The buyer can imagine using this character repeatedly, not only the phrase."
+      - "The character does not look like generic clip art or a plain object icon."
+  communication_clarity:
+    weight: 15
+    min_score: 7
+    checks:
+      - "The message is understandable from the expression, pose, and illustration even before reading text."
+      - "Each item has a defined chat function and emotional state."
+      - "The sticker answers a real conversation moment."
+  expression_variety:
+    weight: 12
+    min_score: 7
+    checks:
+      - "The pack varies face, gesture, silhouette, emotion, camera distance, and props."
+      - "Adjacent items are not just minor prop swaps."
+      - "At least three items use strong facial or body exaggeration."
+  text_integration:
+    weight: 12
+    min_score: 7
+    checks:
+      - "Text is readable at chat size."
+      - "Text is integrated into the artwork or style system."
+      - "Detached generic label boxes are avoided unless explicitly style-locked."
+      - "Text appears once and exactly matches the item plan."
+  current_market_fit:
+    weight: 12
+    min_score: 7
+    checks:
+      - "The style does not feel like old free sticker clip art."
+      - "The pack has a clear buyer promise visible from the main image and first few items."
+      - "The concept fits current daily-use, cute, humorous, weird, greeting, or polite-message demand without copying existing IP."
+  composition_and_readability:
+    weight: 10
+    min_score: 7
+    checks:
+      - "The character is large enough on the 370 x 320 canvas."
+      - "Important face and gesture details survive chat-size preview."
+      - "The layout has clean negative space and no clutter."
+  style_consistency:
+    weight: 8
+    min_score: 7
+    checks:
+      - "Line weight, palette, face design, text treatment, and character proportions are consistent."
+      - "The set feels designed, not assembled from unrelated generated cells."
+  pack_strategy:
+    weight: 8
+    min_score: 7
+    checks:
+      - "One-phrase packs still offer distinct use contexts and emotional nuances."
+      - "Reserve items are weaker for documented reasons."
+      - "The first item, main image, and tab image sell the product quickly."
+  review_and_rights_safety:
+    weight: 8
+    min_score: 8
+    checks:
+      - "No existing IP, public figures, logos, company marks, ads, political/religious solicitation, adult content, graphic violence, discrimination, illegal activity, or public-order concerns."
+      - "No specific living artist or famous work style dependency."
+
+automatic_failure_patterns:
+  - "Generated 4x2 sheet art is used as final production without per-item art direction and QA."
+  - "A generic detached text label is used across the pack without a style-lock justification."
+  - "Most items only make sense after reading the text."
+  - "The character is a plain object icon with minimal face or emotional range."
+  - "The pack has fewer than six visibly distinct poses or emotional states."
+  - "Chat-size preview makes the face, gesture, or text hard to read."
+  - "The output primarily looks like a technical placeholder, fixture, clip art, or old free sticker set."
+
+required_project_artifacts:
+  - "reports/market_research_notes.md"
+  - "reports/character_design_lock.md"
+  - "reports/chat_size_preview.png"
+
+recommended_workflow:
+  - "Research current LINE Store/Creators examples at a high level; record trends without copying protected expression."
+  - "Generate or sketch character candidates first."
+  - "Lock character design and text system before item production."
+  - "Write item plans around chat function and emotional state, not only physical action."
+  - "Generate one final source image per adopted item."
+  - "Run technical validation and market-grade QA separately."

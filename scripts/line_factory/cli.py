@@ -6,6 +6,7 @@ from pathlib import Path
 
 from .finish import finish_project
 from .generation import write_generation_qa_checklist, write_image_generation_plan
+from .market_quality import audit_market_quality, build_market_quality_report
 from .package import PackageError, package_project, zip_listing
 from .project import init_project, load_project
 from .reports import build_all_reports, write_validation_report
@@ -28,7 +29,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Use manual HAG enforcement or explicit automated approval-gate waiver.",
     )
 
-    for name in ["generate-plan", "finish", "validate", "package", "report"]:
+    for name in ["generate-plan", "finish", "validate", "package", "report", "market-audit"]:
         cmd = sub.add_parser(name)
         cmd.add_argument("--project", required=True)
     return parser
@@ -78,11 +79,19 @@ def main(argv: list[str] | None = None) -> int:
             print("ZIP contents:")
             for name in zip_listing(zip_path):
                 print(f"  {name}")
+            print("Technical package only. Run `market-audit` and resolve failures before manual upload.")
             print("Manual action remains: LINE Creators Market upload, pricing, and sales submission.")
             return 0
         if args.command == "report":
             result = build_all_reports(project)
             print(f"Reports generated in {project.reports_dir}")
+            return 0 if result.ok else 2
+        if args.command == "market-audit":
+            result = audit_market_quality(project)
+            build_market_quality_report(project, result)
+            print(f"Market quality {'PASS' if result.ok else 'FAIL'}")
+            print(f"Score: {result.total_score}/100")
+            print(f"Report: {project.reports_dir / 'market_quality.md'}")
             return 0 if result.ok else 2
     except (FileNotFoundError, ValueError, RuntimeError, PackageError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
