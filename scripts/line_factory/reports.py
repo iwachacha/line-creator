@@ -26,10 +26,15 @@ def write_validation_report(project: Project, result: ValidationResult | None = 
     lines.extend([f"- {i}" for i in result.info] or ["- None"])
     lines.append("")
     lines.append("## Human Approval")
+    lines.append(f"- Approval policy: `{project.approval_policy}`")
     for gate, state in project.approvals.items():
-        lines.append(f"- {gate}: {state}")
+        effective = "automated" if project.uses_automated_approvals else state
+        lines.append(f"- {gate}: {effective}")
     lines.append("")
-    lines.append("All HAG-1 through HAG-5 entries must be `approved` in `project.yml` before ZIP creation.")
+    if project.uses_automated_approvals:
+        lines.append("Automated approval policy is active; HAG gates are waived for CLI packaging.")
+    else:
+        lines.append("All HAG-1 through HAG-5 entries must be `approved` in `project.yml` before ZIP creation.")
     text = "\n".join(lines) + "\n"
     project.reports_dir.mkdir(parents=True, exist_ok=True)
     (project.reports_dir / "validation.md").write_text(text, encoding="utf-8")

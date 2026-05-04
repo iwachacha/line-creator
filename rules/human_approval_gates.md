@@ -20,4 +20,8 @@ Approve item list, expression spread, wording, and balance before mass generatio
 
 Use `reports/validation.md`, `reports/contact_sheet.png`, and `submission_checklist.md` for final visual QA, readability, typo, and review-risk confirmation before manual LINE upload.
 
-No agent may mark a project READY if required approvals are missing or validation has fatal errors.
+No agent may mark a project READY if validation has fatal errors.
+
+In manual mode, no agent may mark a project READY if required approvals are missing.
+
+In automated mode, `project.yml` must explicitly set `automation.approval_policy: automated`. The CLI then treats HAG gates as waived for packaging, and automated validation, generated reports, and recorded QA rationale replace the stop-and-wait approval steps.

@@ -7,6 +7,8 @@ title: ""
 description: ""
 copyright: ""
 status: draft
+automation:
+  approval_policy: manual
 approvals:
   HAG-1: pending
   HAG-2: pending

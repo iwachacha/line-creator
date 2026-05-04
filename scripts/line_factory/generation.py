@@ -28,6 +28,16 @@ def build_image_generation_plan(project: Project) -> str:
         "Generate each source as a high-resolution square or near-square PNG-ready illustration with generous padding. "
         "The CLI will resize and center it for LINE's final dimensions."
     )
+    approval_note = (
+        "Automated approval policy is active; proceed through generation, QA, validate, and package without HAG stops."
+        if project.uses_automated_approvals
+        else "Manual approval policy is active; stop at required HAG checkpoints."
+    )
+    final_step = (
+        "7. Continue to `python -m line_factory.cli package --project <project>` after automated QA passes."
+        if project.uses_automated_approvals
+        else "7. Stop for HAG-5 before ZIP upload."
+    )
 
     lines = [
         f"# Image Generation Plan: {project.name}",
@@ -48,6 +58,8 @@ def build_image_generation_plan(project: Project) -> str:
         f"Use case: illustration-story",
         f"Asset type: {product}",
         f"Project: {project.name}",
+        f"Approval policy: {project.approval_policy}",
+        approval_note,
         f"Final target: {target_size}",
         f"Language: {project.config.get('language', 'ja')}",
         f"Source handling: {source_note}",
@@ -73,7 +85,11 @@ def build_image_generation_plan(project: Project) -> str:
         "## Item Prompts",
     ]
     for item in items:
-        text_part = f'Text (verbatim): "{item.text}"' if item.text else "Text: no text unless approved in HAG-4"
+        text_part = (
+            f'Text (verbatim): "{item.text}"'
+            if item.text
+            else "Text: no text unless allowed by the approved item plan or automated production plan"
+        )
         filename = f"{item.index:02d}.png" if project.kind == "static_sticker" else f"{item.index:03d}.png"
         lines.extend(
             [
@@ -94,7 +110,7 @@ def build_image_generation_plan(project: Project) -> str:
             "4. Record source mapping and raw-generation evidence in `assets/working/source_manifest.yml`.",
             "5. Run `python -m line_factory.cli finish --project <project>`.",
             "6. Run `python -m line_factory.cli validate --project <project>` and review warnings.",
-            "7. Stop for HAG-5 before ZIP upload.",
+            final_step,
         ]
     )
     return "\n".join(lines) + "\n"
@@ -108,6 +124,11 @@ def write_image_generation_plan(project: Project) -> Path:
 
 
 def build_generation_qa_checklist(project: Project) -> str:
+    final_qa_line = (
+        "- [ ] Automated final QA has reviewed `reports/contact_sheet.png` and `reports/visual_report.png` before packaging."
+        if project.uses_automated_approvals
+        else "- [ ] HAG-5 will review final `reports/contact_sheet.png` before manual upload."
+    )
     lines = [
         f"# Generation QA Checklist: {project.name}",
         "",
@@ -133,7 +154,7 @@ def build_generation_qa_checklist(project: Project) -> str:
         "",
         "## Rights and Review",
         "- [ ] No existing characters, famous work styles, specific living artist styles, logos, trademarks, public figures, advertising, or unclear-rights motifs.",
-        "- [ ] HAG-5 will review final `reports/contact_sheet.png` before manual upload.",
+        final_qa_line,
         "",
     ]
     return "\n".join(lines)

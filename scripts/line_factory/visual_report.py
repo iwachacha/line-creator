@@ -10,6 +10,16 @@ from .project import Project
 def build_visual_report(project: Project) -> str:
     build_contact_sheet(project)
     visual_png = build_visual_report_image(project)
+    final_gate = (
+        "- Automated approval policy is active; use this report as package-readiness evidence."
+        if project.uses_automated_approvals
+        else "- ZIP upload must wait for HAG-5 approval."
+    )
+    generation_gate = (
+        "- If generated artwork was used, review `reports/generation_qa_checklist.md` before packaging."
+        if project.uses_automated_approvals
+        else "- If generated artwork was used, review `reports/generation_qa_checklist.md` before HAG-5."
+    )
     text = "\n".join(
         [
             f"# Visual Report: {project.name}",
@@ -18,10 +28,10 @@ def build_visual_report(project: Project) -> str:
             "",
             "- Contact sheet: `reports/contact_sheet.png`",
             "- Visual QA sheet: `reports/visual_report.png`",
-            "- If generated artwork was used, review `reports/generation_qa_checklist.md` before HAG-5.",
+            generation_gate,
             "- Confirm integrated text belongs to the artwork and is not a detached generic label unless explicitly style-locked.",
             "- Confirm the artwork reads as LINE sticker/emoji art, not a physical sticker mockup.",
-            "- ZIP upload must wait for HAG-5 approval.",
+            final_gate,
             "",
         ]
     )

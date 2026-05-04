@@ -1,6 +1,6 @@
 # Sticker Batch Prompt
 
-Generate original source images for ordinary static LINE stickers after HAG-4 approval.
+Generate original source images for ordinary static LINE stickers after HAG-4 approval or automated item-plan lock.
 
 Each item must be readable in daily conversation, visually varied, and transparent-background PNG-ready. Keep final sticker artwork within 370 x 320 px after finishing.
 

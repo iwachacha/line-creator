@@ -1,6 +1,6 @@
 # Base Candidates Prompt
 
-Create original base candidate directions for the approved concept.
+Create original base candidate directions for the approved concept or automated concept selection.
 
 Return 3 options with palette, line weight, expression range, text style, and review-risk notes.
 

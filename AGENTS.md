@@ -30,9 +30,9 @@ python -m line_factory.cli <command> --project projects/<name>
 
 Initial commands are `init`, `generate-plan`, `finish`, `validate`, `package`, and `report`.
 
-## Human Approval Gates
+## Approval Policy
 
-Stop and clearly request human approval at:
+Default projects use manual human approval gates. Stop and clearly request human approval at:
 
 - HAG-1: concept, target users, use cases, count, language
 - HAG-2: rights, trademarks, people, existing IP, advertising, prohibited motifs
@@ -40,7 +40,9 @@ Stop and clearly request human approval at:
 - HAG-4: item list and expression/text balance before production
 - HAG-5: final visual QA and review-risk check before ZIP upload
 
-Approval state is canonical in `project.yml`; `approvals.md` is for human-readable notes. Never mark a project READY if validation has fatal errors or a required approval is missing.
+Approval state is canonical in `project.yml`; `approvals.md` is for human-readable notes.
+
+Fully automated projects may set `automation.approval_policy: automated` in `project.yml` or be created with `python -m line_factory.cli init --approval-policy automated`. In automated mode, do not stop for HAG-1 through HAG-5; instead run automated validation, risk reporting, visual report generation, and packaging. Never mark a project READY if validation has fatal errors. In manual mode, also never mark READY if a required approval is missing.
 
 ## Rights and Review Constraints
 
@@ -61,6 +63,6 @@ python -m line_factory.cli validate --project projects/sample_static_sticker
 python -m line_factory.cli package --project projects/sample_static_sticker
 ```
 
-ZIP upload remains manual after HAG-5.
+ZIP upload remains manual after HAG-5 in manual mode, or after successful automated validation/package in automated mode.
 
 `projects/sample_static_sticker` is a test-only approved fixture so the verification commands can exercise packaging under HAG enforcement. Do not treat it as production artwork.

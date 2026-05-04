@@ -2,11 +2,13 @@
 
 This checklist is for manual review before LINE Creators Market upload.
 
-- [ ] HAG-1 approved in `approvals.md`
-- [ ] HAG-2 approved in `approvals.md`
-- [ ] HAG-3 approved in `approvals.md`
-- [ ] HAG-4 approved in `approvals.md`
-- [ ] HAG-5 approved in `approvals.md`
+- [ ] Approval policy confirmed: manual HAG approvals or `automation.approval_policy: automated`
+- [ ] Manual mode: HAG-1 approved in `approvals.md`
+- [ ] Manual mode: HAG-2 approved in `approvals.md`
+- [ ] Manual mode: HAG-3 approved in `approvals.md`
+- [ ] Manual mode: HAG-4 approved in `approvals.md`
+- [ ] Manual mode: HAG-5 approved in `approvals.md`
+- [ ] Automated mode: automated QA rationale recorded in `approvals.md`
 - [ ] `reports/validation.md` has no fatal errors
 - [ ] `reports/contact_sheet.png` reviewed for readability and balance
 - [ ] Text has no typos

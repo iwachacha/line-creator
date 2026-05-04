@@ -30,7 +30,7 @@ Official LINE references checked on 2026-05-04 JST:
 
 ## Goals
 
-- Prevent the CLI from producing upload-ready artifacts when required approvals or fatal validations are missing.
+- Prevent the CLI from producing upload-ready artifacts when fatal validations are missing, and block missing approvals unless an explicit automated approval policy is active.
 - Catch the most common generation and finishing failures before manual upload.
 - Keep the project flow generic enough for any original theme, character, object, or genre.
 - Make all quality gates reproducible through CLI reports and tests.
@@ -51,7 +51,8 @@ Problem: `package` currently blocks only fatal validation errors. It does not bl
 
 Target behavior:
 
-- `package` must fail when any of HAG-1 through HAG-5 is not approved.
+- `package` must fail when any of HAG-1 through HAG-5 is not approved in manual mode.
+- `package` may proceed with pending HAG entries only when `automation.approval_policy: automated` is explicit in `project.yml`.
 - `validate` should report approval status clearly.
 - Approval state should be read from one canonical source, preferably `project.yml`, with `approvals.md` treated as human-readable notes.
 - If a future override is needed, it must be explicit and visibly named, such as `--allow-unapproved-package`, and should not be used in production workflows.
@@ -67,10 +68,11 @@ Likely files:
 
 Acceptance criteria:
 
-- A freshly initialized project cannot be packaged.
+- A freshly initialized manual project cannot be packaged.
 - A project with validation errors cannot be packaged.
 - A project with all required HAG approvals and valid final PNGs can be packaged.
-- Validation output lists each gate as approved or pending.
+- An automated-policy project with valid metadata and PNGs can be packaged without editing HAG entries.
+- Validation output lists each gate as approved, pending, or automated.
 
 ### 2. Restore the Sample Project Contract
 
@@ -391,7 +393,8 @@ When the implementation work starts, update the workflow docs as each feature la
 
 Add or update tests for:
 
-- Pending HAG approvals block packaging.
+- Pending HAG approvals block packaging in manual mode.
+- Explicit automated approval policy allows packaging while HAG entries remain pending.
 - Approved valid project packages successfully.
 - Missing sample fixture commands match documentation.
 - Opaque rectangular source images are flagged.
@@ -420,7 +423,7 @@ Add or update tests for:
 The improvement series is complete when:
 
 - All documented verification commands pass.
-- `package` cannot produce a production ZIP without passing validation and required approvals.
+- `package` cannot produce a production ZIP without passing validation, and requires either manual approvals or explicit automated approval policy.
 - Reports give enough context for HAG-5 without inspecting raw folders manually.
 - A new project can be taken from idea to manual upload preparation using only `projects/_template/`, workflows, rules, prompts, and CLI commands.
 - Remaining manual responsibilities are explicit: final human approval, LINE upload, pricing, and sales submission.

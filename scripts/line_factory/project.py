@@ -70,7 +70,22 @@ class Project:
         return {gate: str(raw.get(gate, "pending")).strip().lower() for gate in REQUIRED_HAGS}
 
     @property
+    def automation(self) -> dict[str, Any]:
+        raw = self.config.get("automation") or {}
+        return raw if isinstance(raw, dict) else {}
+
+    @property
+    def approval_policy(self) -> str:
+        return str(self.automation.get("approval_policy") or "manual").strip().lower()
+
+    @property
+    def uses_automated_approvals(self) -> bool:
+        return self.approval_policy == "automated"
+
+    @property
     def pending_approvals(self) -> list[str]:
+        if self.uses_automated_approvals:
+            return []
         return [gate for gate, state in self.approvals.items() if state != "approved"]
 
     @property
@@ -100,12 +115,20 @@ def load_project(project_path: str | Path) -> Project:
     return project
 
 
-def init_project(project_path: str | Path, kind: str, count: int, force: bool = False) -> Project:
+def init_project(
+    project_path: str | Path,
+    kind: str,
+    count: int,
+    force: bool = False,
+    approval_policy: str = "manual",
+) -> Project:
     path = Path(project_path).resolve()
     if path.exists() and any(path.iterdir()) and not force:
         raise FileExistsError(f"Project already exists and is not empty: {path}")
     if not valid_count(kind, count):
         raise SpecError(f"Invalid count {count} for {kind}")
+    if approval_policy not in {"manual", "automated"}:
+        raise SpecError(f"Invalid approval policy {approval_policy!r}; expected manual or automated")
     if path.exists() and force:
         projects_root = (ROOT / "projects").resolve()
         try:
@@ -120,6 +143,9 @@ def init_project(project_path: str | Path, kind: str, count: int, force: bool = 
     config["name"] = path.name
     config["kind"] = kind
     config["count"] = count
+    automation = config.get("automation") if isinstance(config.get("automation"), dict) else {}
+    automation["approval_policy"] = approval_policy
+    config["automation"] = automation
     with cfg_path.open("w", encoding="utf-8") as f:
         yaml.safe_dump(config, f, sort_keys=False, allow_unicode=True)
     write_default_items(path / "items.csv", count)

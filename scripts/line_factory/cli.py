@@ -21,6 +21,12 @@ def build_parser() -> argparse.ArgumentParser:
     init.add_argument("--kind", choices=["static_sticker", "regular_emoji"], default="static_sticker")
     init.add_argument("--count", type=int, default=8)
     init.add_argument("--force", action="store_true")
+    init.add_argument(
+        "--approval-policy",
+        choices=["manual", "automated"],
+        default="manual",
+        help="Use manual HAG enforcement or explicit automated approval-gate waiver.",
+    )
 
     for name in ["generate-plan", "finish", "validate", "package", "report"]:
         cmd = sub.add_parser(name)
@@ -33,9 +39,12 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         if args.command == "init":
-            project = init_project(args.project, args.kind, args.count, args.force)
+            project = init_project(args.project, args.kind, args.count, args.force, args.approval_policy)
             print(f"Initialized {project.kind} project at {project.path}")
-            print("Human approval required: HAG-1 and HAG-2 before style or production work.")
+            if project.uses_automated_approvals:
+                print("Approval policy: automated. HAG gates are waived for CLI packaging.")
+            else:
+                print("Human approval required: HAG-1 and HAG-2 before style or production work.")
             return 0
         project = load_project(args.project)
         if args.command == "generate-plan":
@@ -50,7 +59,10 @@ def main(argv: list[str] | None = None) -> int:
             outputs = finish_project(project)
             print(f"Finished {len(outputs)} PNG files into {project.final_dir}")
             print(f"Generated contact sheet: {project.reports_dir / 'contact_sheet.png'}")
-            print("Human approval required: HAG-5 before manual upload.")
+            if project.uses_automated_approvals:
+                print("Approval policy: automated. Continue with validate/package after automated QA.")
+            else:
+                print("Human approval required: HAG-5 before manual upload.")
             return 0
         if args.command == "validate":
             result = validate_project(project)
@@ -66,7 +78,7 @@ def main(argv: list[str] | None = None) -> int:
             print("ZIP contents:")
             for name in zip_listing(zip_path):
                 print(f"  {name}")
-            print("Manual action remains: final visual review, LINE upload, pricing, and sales submission.")
+            print("Manual action remains: LINE Creators Market upload, pricing, and sales submission.")
             return 0
         if args.command == "report":
             result = build_all_reports(project)

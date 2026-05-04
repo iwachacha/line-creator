@@ -25,7 +25,7 @@ def package_name(project: Project) -> str:
 def package_project(project: Project) -> Path:
     result = build_all_reports(project)
     if not result.ok:
-        raise PackageError("Validation has fatal errors or pending approvals; package blocked.")
+        raise PackageError("Validation has fatal errors; package blocked.")
     spec = load_kind_spec(project.kind)
     expected = expected_images(project.kind, project.count, spec)
     project.dist_dir.mkdir(parents=True, exist_ok=True)

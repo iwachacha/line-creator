@@ -110,6 +110,39 @@ def test_pending_hag_blocks_package(tmp_path):
         package_project(project)
 
 
+def test_automated_approval_policy_allows_package_without_hag_updates(tmp_path):
+    project_path = tmp_path / "case"
+    init_project(project_path, "static_sticker", 8, approval_policy="automated")
+    approve_project(project_path)
+    cfg_path = project_path / "project.yml"
+    cfg = yaml.safe_load(cfg_path.read_text(encoding="utf-8"))
+    cfg["approvals"] = {f"HAG-{i}": "pending" for i in range(1, 6)}
+    cfg_path.write_text(yaml.safe_dump(cfg, sort_keys=False, allow_unicode=True), encoding="utf-8")
+    make_sources(project_path, 8)
+    project = load_project(project_path)
+    finish_project(project)
+    result = validate_project(project)
+    assert not any("approval pending" in error for error in result.errors)
+    assert any("approval policy: automated" in info for info in result.info)
+    zip_path = package_project(project)
+    assert zip_path.exists()
+
+
+def test_invalid_approval_policy_fails_validation(tmp_path):
+    project_path = tmp_path / "case"
+    init_project(project_path, "static_sticker", 8)
+    approve_project(project_path)
+    cfg_path = project_path / "project.yml"
+    cfg = yaml.safe_load(cfg_path.read_text(encoding="utf-8"))
+    cfg["automation"] = {"approval_policy": "robot"}
+    cfg_path.write_text(yaml.safe_dump(cfg, sort_keys=False, allow_unicode=True), encoding="utf-8")
+    make_sources(project_path, 8)
+    project = load_project(project_path)
+    finish_project(project)
+    result = validate_project(project)
+    assert any("automation.approval_policy" in error for error in result.errors)
+
+
 def test_metadata_required_and_limited(tmp_path):
     project_path = tmp_path / "case"
     init_project(project_path, "static_sticker", 8)

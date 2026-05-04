@@ -71,6 +71,14 @@ def validate_project(project: Project) -> ValidationResult:
 
 
 def check_approvals(project: Project, result: ValidationResult) -> None:
+    if project.approval_policy not in {"manual", "automated"}:
+        result.add_error("automation.approval_policy: expected `manual` or `automated`")
+        return
+    if project.uses_automated_approvals:
+        result.info.append("approval policy: automated; HAG gates are waived for this project")
+        for gate in project.approvals:
+            result.info.append(f"{gate}: automated")
+        return
     for gate, state in project.approvals.items():
         if state == "approved":
             result.info.append(f"{gate}: approved")

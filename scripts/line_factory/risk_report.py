@@ -11,6 +11,16 @@ def build_risk_report(project: Project) -> str:
     checklist = risk.get("checklist", [])
     manual = risk.get("manual_review_required", [])
     findings = scan_project_risks(project, risk)
+    review_note = (
+        "Automated approval policy is active; treat findings as automated QA blockers until resolved or documented."
+        if project.uses_automated_approvals
+        else "Review findings manually in HAG-2 and again in HAG-5. Keyword absence is not approval."
+    )
+    hag_note = (
+        "Automated approval policy active; confirm validation and visual reports before packaging."
+        if project.uses_automated_approvals
+        else "Confirm HAG-5 before manual ZIP upload."
+    )
     lines = [
         f"# Risk Report: {project.name}",
         "",
@@ -22,7 +32,7 @@ def build_risk_report(project: Project) -> str:
     lines.extend(
         [
             "",
-            "Review findings manually in HAG-2 and again in HAG-5. Keyword absence is not approval.",
+            review_note,
             "",
             "## Required Human Review",
         ]
@@ -32,7 +42,7 @@ def build_risk_report(project: Project) -> str:
     lines.extend(["", "## Review Checklist"])
     for item in checklist:
         lines.append(f"- [ ] {item}")
-    lines.extend(["", "## HAG Status", "Confirm HAG-5 before manual ZIP upload."])
+    lines.extend(["", "## HAG Status", hag_note])
     text = "\n".join(lines) + "\n"
     project.reports_dir.mkdir(parents=True, exist_ok=True)
     (project.reports_dir / "risk_report.md").write_text(text, encoding="utf-8")

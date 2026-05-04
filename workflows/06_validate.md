@@ -10,11 +10,12 @@ python -m line_factory.cli validate --project projects/<name>
 
 Output: `reports/validation.md`, `reports/risk_report.md`, `reports/contact_sheet.png`, and `reports/visual_report.png`.
 
-Fatal errors block READY status and packaging. Pending HAG approvals are fatal for packaging. Warnings require human review.
+Fatal errors block READY status and packaging. Pending HAG approvals are fatal for packaging unless `project.yml` explicitly sets `automation.approval_policy: automated`. Warnings require review by the active approval policy.
 
 Validation QA notes:
 
-- Confirm HAG-1 through HAG-5 are `approved` in `project.yml` only after real human review.
+- In manual mode, confirm HAG-1 through HAG-5 are `approved` in `project.yml` only after real human review.
+- In automated mode, confirm `automation.approval_policy: automated` is intentional and use validation, risk, contact-sheet, and visual reports as the gate evidence.
 - Confirm required metadata fields pass length checks and contain no URLs, advertising-like wording, placeholders, or device-dependent symbols.
 - Confirm every item has a traceable `source_file` in `items.csv`; review `reports/source_mapping.yml` after `finish`.
 - Confirm `assets/working/source_manifest.yml` records raw-generation evidence or approved fallback-source notes.

@@ -1,16 +1,16 @@
 # 04 Generate
 
-Input: approved style lock and item list.
+Input: approved or automated style lock and item list.
 
 Output: source PNGs in `assets/source/`.
 
-Before production, confirm HAG-4: item list, expressions, wording, and balance.
+Before production, confirm HAG-4 in manual mode. In automated mode, record the item-list, expression, wording, and balance rationale, then proceed.
 
 Required generation mode:
 
 - Use the Codex built-in `image_gen` tool through the `imagegen` skill for production artwork.
 - Run `python -m line_factory.cli generate-plan --project projects/<name>` to create `reports/image_generation_plan.md`.
-- Generate each approved item with a dedicated prompt from that plan.
+- Generate each approved or automated-plan item with a dedicated prompt from that plan.
 - Copy accepted generated images into `assets/source/` using the `source_file` names declared in `items.csv`, for example `source_01.png`.
 - Record raw-output evidence, prompt references, source filenames, approval notes, and known exceptions in `assets/working/source_manifest.yml`.
 - Do not use Pillow, simple geometry, placeholder SVGs, or dummy source PNGs as production artwork unless the user explicitly approves fallback quality.
